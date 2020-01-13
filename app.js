@@ -5,7 +5,7 @@ const app = express()
 const MongoClient = require('mongodb').MongoClient;
 const ObjectID= require('mongodb').ObjectID;
 const DBUrl ="mongodb://127.0.0.1:27017/";
-const DBName = "iqbalf";
+const DBName = "qwerty";
 
 let dbo=null;
 MongoClient.connect(DBUrl,(error,db)=>{
@@ -16,7 +16,7 @@ MongoClient.connect(DBUrl,(error,db)=>{
 app.use(bodyParser.urlencoded({ extended: false }))
 
 app.get('/siswa', function (request, response){
-    dbo.collection("movie").find().toArray((error,res)=>{
+    dbo.collection("users").find().toArray((error,res)=>{
         if(error) throw error;
         response.json(res);
     })
@@ -25,29 +25,59 @@ app.get('/siswa', function (request, response){
 app.get('/siswa/:id',(req, response)=>{
     let id = req.params.id;
     let id_object = new ObjectID(id);
-    dbo.collection("movie").findOne({"_id":id_object},(error,res)=>{
+    dbo.collection("users").findOne({"_id":id_object},(error,res)=>{
         if(error) throw error;
         response.json(res);
     })
 })
 
-app.post('/siswa',(req, res)=>{
-    let namaSiswa = req.body.nama;
-    let alamatSiswa = req.body.alamat;
-    res.end('Menampilkan Siswa dengan nama : '+namaSiswa+' alamat : '+alamatSiswa);
+app.post('/siswa',(req, response)=>{
+    let username = req.body.username;
+    let password = req.body.password;
+
+    dbo.collection("users").insertOne({
+        username : username,
+        password : password,
+    },(err,res)=>{
+        if (!err) {
+            response.end('Data Success');
+            response.json(res);
+        }else{
+            throw err;
+        }
+    })
 })
 
-app.delete('/siswa/:nama',(req,res)=>{
-    let namaSiswa = req.params.nama;
-    res.end('Siswa Bernama '+namaSiswa+' Berhasil di Hapus');
-})
-
-
-app.put('/siswa/:id',(req, res)=>{
+app.delete('/siswa/:id',(req,response)=>{
     let id = req.params.id;
-    let namaSiswa = req.body.nama;
-    let alamatSiswa = req.body.alamat;
-    res.end('Berhasil diUbah Siswa dengan id :'+id+' nama : '+namaSiswa+' alamat : '+alamatSiswa);
+    let id_object = new ObjectID(id);
+    dbo.collection("users").remove({"_id":id_object},(error,res)=>{
+        if(error) throw error;
+        response.json('Berhasil Hapus '+res);
+    })
+})
+
+
+app.put('/siswa/:id',(req, response)=>{
+    let id = req.params.id;
+    let id_object = new ObjectID(id);
+
+    let username = req.body.username;
+    let password = req.body.password;
+
+    dbo.collection("users").updateOne({
+        "_id":id_object
+    },{$set :{
+        username : username,
+        password : password
+    }},(err,res)=>{
+        if (!err) {
+            response.json(res);
+            response.end('Data Updated');
+        }else{
+            throw err;
+        }
+    })
 })
 
 app.listen('3000',(e)=>{
